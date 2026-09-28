@@ -1,0 +1,125 @@
+{
+  "id": "win-01-ipconfig",
+  "sequence": "link",
+  "name": "Windows IP Inventory",
+  "objective": "On the Windows host win-01, assign 10.0.0.30/24 to Ethernet0 and prove it with ipconfig.",
+  "hint": "New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24, then ipconfig.",
+  "track": "windows",
+  "par": 1,
+  "os_focus": [
+    "windows"
+  ],
+  "start": {
+    "networks": {
+      "lab": "10.0.0.0/24"
+    },
+    "hosts": {
+      "win-01": {
+        "os": "windows",
+        "role": "client",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lab",
+            "state": "down",
+            "mac": "00:15:5D:00:00:30"
+          }
+        },
+        "firewall_enabled": false
+      },
+      "srv-01": {
+        "os": "windows",
+        "role": "server",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lab",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "has_ip",
+      "params": {
+        "host": "win-01",
+        "iface": "Ethernet0",
+        "ip": "10.0.0.30",
+        "prefix": 24
+      },
+      "description": "Ethernet0 has 10.0.0.30/24"
+    },
+    {
+      "type": "iface_up",
+      "params": {
+        "host": "win-01",
+        "iface": "Ethernet0"
+      },
+      "description": "Ethernet0 is up"
+    },
+    {
+      "type": "os_is",
+      "params": {
+        "host": "win-01",
+        "os": "windows"
+      },
+      "description": "win-01 is a Windows host"
+    }
+  ],
+  "solution_commands": [
+    "os windows",
+    "New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24"
+  ],
+  "solution_commands_windows": [
+    "New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24"
+  ],
+  "steps": {
+    "linux": [
+      {
+        "title": "Switch to Windows dialect",
+        "command": "os windows",
+        "note": "This lesson is Windows-native. Use PowerShell-shaped commands."
+      },
+      {
+        "title": "List adapters",
+        "command": "Get-NetAdapter",
+        "optional": true
+      },
+      {
+        "title": "Assign IPv4",
+        "command": "New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24",
+        "note": "PrefixLength 24 equals subnet mask 255.255.255.0."
+      },
+      {
+        "title": "Confirm",
+        "command": "ipconfig",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "List adapters",
+        "command": "Get-NetAdapter",
+        "note": "Note the InterfaceAlias — here it is Ethernet0."
+      },
+      {
+        "title": "Assign IPv4",
+        "command": "New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24",
+        "note": "This is the modern replacement for netsh interface ip set address."
+      },
+      {
+        "title": "Confirm with ipconfig",
+        "command": "ipconfig",
+        "note": "IPv4 Address should read 10.0.0.30, mask 255.255.255.0."
+      },
+      {
+        "title": "Goal check",
+        "command": "goal",
+        "optional": true
+      }
+    ]
+  }
+}

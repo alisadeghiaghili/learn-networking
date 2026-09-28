@@ -62,7 +62,7 @@
     "ssh docker-01",
     "docker run -d --name api -p 8080:80 nginx"
   ],
-  "track": "linux",
+  "track": "both",
   "steps": {
     "linux": [
       {
@@ -94,5 +94,9 @@
         "command": "docker run -d --name api -p 8080:80 nginx"
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh docker-01",
+    "docker run -d --name api -p 8080:80 nginx"
+  ]
 }

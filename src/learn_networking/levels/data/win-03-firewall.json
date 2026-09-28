@@ -1,0 +1,148 @@
+{
+  "id": "win-03-firewall",
+  "sequence": "firewall",
+  "name": "Windows Firewall Rule",
+  "objective": "On win-fw (Windows), allow inbound TCP/80 from the LAN with netsh, leaving other ports closed.",
+  "hint": "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow",
+  "track": "windows",
+  "par": 1,
+  "os_focus": [
+    "windows"
+  ],
+  "start": {
+    "networks": {
+      "lan": "10.0.0.0/24"
+    },
+    "hosts": {
+      "win-fw": {
+        "os": "windows",
+        "role": "web",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lan",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": true,
+        "firewall_rules": [],
+        "services": {
+          "80": {
+            "proto": "tcp",
+            "name": "http",
+            "banner": "hello from web",
+            "healthy": true
+          },
+          "22": {
+            "proto": "tcp",
+            "name": "ssh",
+            "banner": "OpenSSH",
+            "healthy": true
+          }
+        }
+      },
+      "win-client": {
+        "os": "windows",
+        "role": "client",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lan",
+            "ip": "10.0.0.50",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "firewall_allows",
+      "params": {
+        "host": "win-fw",
+        "proto": "tcp",
+        "port": 80,
+        "src": "10.0.0.50"
+      },
+      "description": "TCP/80 allowed from win-client"
+    },
+    {
+      "type": "tcp_ok",
+      "params": {
+        "source": "win-client",
+        "target": "win-fw",
+        "port": 80
+      },
+      "description": "win-client can reach win-fw:80"
+    },
+    {
+      "type": "firewall_denies",
+      "params": {
+        "host": "win-fw",
+        "proto": "tcp",
+        "port": 22,
+        "src": "10.0.0.50"
+      },
+      "description": "TCP/22 still denied (default policy)"
+    }
+  ],
+  "solution_commands": [
+    "os windows",
+    "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+  ],
+  "solution_commands_windows": [
+    "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+  ],
+  "steps": {
+    "linux": [
+      {
+        "title": "Use Windows firewall verbs",
+        "command": "os windows"
+      },
+      {
+        "title": "List current profile state",
+        "command": "netsh advfirewall show allprofiles",
+        "optional": true
+      },
+      {
+        "title": "Allow HTTP",
+        "command": "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+      }
+    ],
+    "windows": [
+      {
+        "title": "Inspect firewall state",
+        "command": "Get-NetFirewallProfile",
+        "note": "Default is enabled and inbound is blocked unless allowed.",
+        "optional": true
+      },
+      {
+        "title": "See current rules",
+        "command": "netsh advfirewall firewall show rule name=all",
+        "optional": true
+      },
+      {
+        "title": "Allow only TCP/80",
+        "command": "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow",
+        "note": "One targeted allow — the security-group pattern on Windows."
+      },
+      {
+        "title": "Verify from the client",
+        "command": "ssh win-client",
+        "optional": true
+      },
+      {
+        "title": "TCP test",
+        "command": "Test-NetConnection win-fw -Port 80",
+        "optional": true
+      },
+      {
+        "title": "Confirm 22 stays closed",
+        "command": "Test-NetConnection win-fw -Port 22",
+        "optional": true
+      }
+    ]
+  }
+}

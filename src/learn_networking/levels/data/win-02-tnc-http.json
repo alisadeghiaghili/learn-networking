@@ -1,0 +1,171 @@
+{
+  "id": "win-02-tnc-http",
+  "sequence": "ports",
+  "name": "Windows Health Probe",
+  "objective": "From win-01, prove TCP/8080 is open on web-01 using Test-NetConnection, then HTTP GET via Invoke-WebRequest.",
+  "hint": "Start the listener on web-01 with docker publish, then Test-NetConnection web-01 -Port 8080 and iwr http://web-01:8080/health.",
+  "track": "windows",
+  "par": 2,
+  "os_focus": [
+    "windows"
+  ],
+  "start": {
+    "networks": {
+      "lab": "10.0.0.0/24"
+    },
+    "hosts": {
+      "win-01": {
+        "os": "windows",
+        "role": "client",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lab",
+            "ip": "10.0.0.30",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false
+      },
+      "web-01": {
+        "os": "linux",
+        "role": "web",
+        "interfaces": {
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false,
+        "services": {
+          "8080": {
+            "proto": "tcp",
+            "name": "http",
+            "banner": "api v1",
+            "healthy": false
+          }
+        }
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "listening",
+      "params": {
+        "host": "web-01",
+        "port": 8080,
+        "proto": "tcp"
+      },
+      "description": "web-01 listens on 8080/tcp"
+    },
+    {
+      "type": "tcp_ok",
+      "params": {
+        "source": "win-01",
+        "target": "web-01",
+        "port": 8080
+      },
+      "description": "win-01 TCP-connects to web-01:8080"
+    },
+    {
+      "type": "http_status",
+      "params": {
+        "source": "win-01",
+        "target": "web-01",
+        "port": 8080,
+        "path": "/health",
+        "status": 200
+      },
+      "description": "GET /health returns 200"
+    }
+  ],
+  "solution_commands": [
+    "ssh web-01",
+    "docker run -d --name web -p 8080:80 nginx"
+  ],
+  "solution_commands_windows": [
+    "ssh web-01",
+    "docker run -d --name web -p 8080:80 nginx",
+    "ssh win-01",
+    "os windows"
+  ],
+  "steps": {
+    "linux": [
+      {
+        "title": "Reproduce with curl (optional)",
+        "command": "ssh win-01",
+        "optional": true
+      },
+      {
+        "title": "Switch to Windows",
+        "command": "os windows"
+      },
+      {
+        "title": "Probe (will fail until fixed)",
+        "command": "Test-NetConnection web-01 -Port 8080",
+        "optional": true
+      },
+      {
+        "title": "Fix the listener",
+        "command": "ssh web-01"
+      },
+      {
+        "title": "Publish healthy HTTP",
+        "command": "docker run -d --name web -p 8080:80 nginx"
+      },
+      {
+        "title": "Back to win-01",
+        "command": "ssh win-01",
+        "optional": true
+      },
+      {
+        "title": "TNC again",
+        "command": "Test-NetConnection web-01 -Port 8080",
+        "optional": true
+      },
+      {
+        "title": "HTTP GET",
+        "command": "iwr http://web-01:8080/health",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "You are on win-01",
+        "command": "whoami",
+        "optional": true
+      },
+      {
+        "title": "TNC before the fix",
+        "command": "Test-NetConnection web-01 -Port 8080",
+        "note": "TcpTestSucceeded False — nothing healthy is serving /health yet.",
+        "optional": true
+      },
+      {
+        "title": "SSH to the web host",
+        "command": "ssh web-01"
+      },
+      {
+        "title": "Publish a healthy listener",
+        "command": "docker run -d --name web -p 8080:80 nginx",
+        "note": "Host port 8080 becomes a healthy HTTP service."
+      },
+      {
+        "title": "Return to Windows client",
+        "command": "ssh win-01"
+      },
+      {
+        "title": "TCP test",
+        "command": "Test-NetConnection web-01 -Port 8080",
+        "note": "TNC is the Windows reachability workhorse (ping + TCP)."
+      },
+      {
+        "title": "HTTP health",
+        "command": "iwr http://web-01:8080/health",
+        "note": "Invoke-WebRequest (iwr) is the Windows curl."
+      }
+    ]
+  }
+}

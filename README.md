@@ -32,10 +32,16 @@ python -m http.server 8080 --directory docs
 Same levels, same goal checks, dual OS command surfaces — terminal on the left,
 live topology and goal checklist on the right.
 
-**Tracks:** switch between **Linux** and **Windows** in the top bar. Levels are
-listed per track; shared drills include both command dialects. Each level has a
-**step-by-step guide** (click a step command to run it) — the learn-dvc
-follow-along style.
+**Tracks:** switch between **Linux** and **Windows** in the top bar.
+
+- **Linux track** — `ip`, `ss`, `dig`, `curl`, `iptables`, `docker`
+- **Windows track** — `ipconfig`, `Get-NetAdapter`, `New-NetIPAddress`,
+  `New-NetRoute`, `Test-NetConnection` / `TNC`, `Resolve-DnsName`,
+  `Invoke-WebRequest` / `iwr`, `netsh advfirewall`, `route print`
+- Shared drills include **both** command dialects (`solution_commands_windows`)
+
+Each level has a **step-by-step guide** (click a step command to run it) —
+the learn-dvc follow-along style. Windows-only series: `win-01` … `win-05`.
 
 **Logo / favicon:** `docs/assets/logo.svg` + `docs/favicon.svg`.
 

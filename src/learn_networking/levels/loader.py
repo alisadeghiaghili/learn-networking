@@ -80,9 +80,13 @@ class Level:
     start: dict[str, Any]
     goal_checks: list[GoalCheck] = field(default_factory=list)
     solution_commands: list[str] = field(default_factory=list)
+    solution_commands_linux: list[str] | None = None
+    solution_commands_windows: list[str] | None = None
     par: int = 0
     os_focus: tuple[str, ...] = ("linux", "windows")
     disabled_commands: tuple[str, ...] = ()
+    track: str = "both"
+    steps: dict[str, list] = field(default_factory=dict)
 
     def build_world(self) -> NetworkWorld:
         """Materialize the starting world.
@@ -440,9 +444,17 @@ def level_from_dict(data: dict[str, Any]) -> Level:
         start=dict(data["start"]),
         goal_checks=checks,
         solution_commands=list(data.get("solution_commands") or []),
+        solution_commands_linux=list(data["solution_commands_linux"])
+        if data.get("solution_commands_linux")
+        else None,
+        solution_commands_windows=list(data["solution_commands_windows"])
+        if data.get("solution_commands_windows")
+        else None,
         par=int(data.get("par", 0)),
         os_focus=tuple(data.get("os_focus") or ("linux", "windows")),
         disabled_commands=tuple(data.get("disabled_commands") or ()),
+        track=str(data.get("track") or "both"),
+        steps=dict(data.get("steps") or {}),
     )
 
 

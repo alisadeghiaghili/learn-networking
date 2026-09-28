@@ -74,7 +74,12 @@ def cmd_os(ctx: CommandContext, argv: list[str]) -> CommandResult:
 
 def cmd_solution(ctx: CommandContext, argv: list[str]) -> CommandResult:
     """Run or print the reference solution (marks level as non-best)."""
-    return ctx.session.show_solution(run="--run" in argv or "-r" in "".join(argv))
+    track = None
+    if "--windows" in argv or "-w" in argv:
+        track = "windows"
+    elif "--linux" in argv:
+        track = "linux"
+    return ctx.session.show_solution(run="--run" in argv or "-r" in argv, track=track)
 
 
 def cmd_help(ctx: CommandContext, argv: list[str]) -> CommandResult:

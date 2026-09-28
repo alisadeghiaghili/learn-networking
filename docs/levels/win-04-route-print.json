@@ -1,0 +1,134 @@
+{
+  "id": "win-04-route-print",
+  "sequence": "route",
+  "name": "Windows Routing Table",
+  "objective": "Give win-01 a default route via 10.0.0.1 using New-NetRoute, then read the table with route print.",
+  "hint": "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1",
+  "track": "windows",
+  "par": 1,
+  "os_focus": [
+    "windows"
+  ],
+  "start": {
+    "networks": {
+      "lan": "10.0.0.0/24",
+      "wan": "10.9.9.0/24"
+    },
+    "hosts": {
+      "win-01": {
+        "os": "windows",
+        "role": "client",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lan",
+            "ip": "10.0.0.30",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false
+      },
+      "gw-01": {
+        "os": "windows",
+        "role": "router",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "lan",
+            "ip": "10.0.0.1",
+            "prefix": 24,
+            "state": "up"
+          },
+          "Ethernet1": {
+            "network": "wan",
+            "ip": "10.9.9.1",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "firewall_enabled": false,
+        "vars": {
+          "ip_forward": "1"
+        }
+      },
+      "remote-01": {
+        "os": "windows",
+        "role": "remote",
+        "interfaces": {
+          "Ethernet0": {
+            "network": "wan",
+            "ip": "10.9.9.50",
+            "prefix": 24,
+            "state": "up"
+          }
+        },
+        "default_gateway": "10.9.9.1",
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "default_gateway",
+      "params": {
+        "host": "win-01",
+        "gateway": "10.0.0.1"
+      },
+      "description": "Default gateway is 10.0.0.1"
+    },
+    {
+      "type": "ping_ok",
+      "params": {
+        "source": "win-01",
+        "target": "10.9.9.50"
+      },
+      "description": "win-01 can reach the remote subnet"
+    }
+  ],
+  "solution_commands": [
+    "os windows",
+    "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1"
+  ],
+  "solution_commands_windows": [
+    "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1"
+  ],
+  "steps": {
+    "linux": [
+      {
+        "title": "Windows routing lesson",
+        "command": "os windows"
+      },
+      {
+        "title": "Read the table",
+        "command": "route print",
+        "optional": true
+      },
+      {
+        "title": "Default route",
+        "command": "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1"
+      }
+    ],
+    "windows": [
+      {
+        "title": "Read the routing table",
+        "command": "route print",
+        "note": "Network Destination / Netmask / Gateway — classic format still used on ops teams.",
+        "optional": true
+      },
+      {
+        "title": "Add default route (modern)",
+        "command": "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1",
+        "note": "DestinationPrefix 0.0.0.0/0 is the default route."
+      },
+      {
+        "title": "Confirm with route print",
+        "command": "route print",
+        "optional": true
+      },
+      {
+        "title": "Cross-subnet probe",
+        "command": "Test-NetConnection 10.9.9.50",
+        "optional": true
+      }
+    ]
+  }
+}

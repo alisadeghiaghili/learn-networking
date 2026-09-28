@@ -96,7 +96,7 @@
   "solution_commands": [
     "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT"
   ],
-  "track": "linux",
+  "track": "both",
   "steps": {
     "linux": [
       {
@@ -122,5 +122,9 @@
         "command": "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT"
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh bastion-01",
+    "netsh advfirewall firewall add rule name=ssh-admin protocol=tcp localport=22 action=allow"
+  ]
 }

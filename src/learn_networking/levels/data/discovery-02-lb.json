@@ -131,7 +131,7 @@
     "ssh web-b",
     "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
   ],
-  "track": "linux",
+  "track": "both",
   "steps": {
     "linux": [
       {
@@ -175,5 +175,11 @@
         "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh web-a",
+    "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow",
+    "ssh web-b",
+    "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+  ]
 }

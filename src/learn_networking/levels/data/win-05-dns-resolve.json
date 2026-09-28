@@ -1,32 +1,31 @@
 {
-  "id": "dns-01-a-record",
+  "id": "win-05-dns-resolve",
   "sequence": "dns",
-  "name": "Name to Address",
-  "objective": "Make api.internal resolve to 10.0.2.10 so the app stops hardcoding IPs.",
-  "hint": "nsupdate add A internal api 10.0.2.10  (or dns-add-record). Then dig api.internal.",
+  "name": "Windows DNS Lookup",
+  "objective": "Make api.internal resolve to 10.0.2.10 and verify with Resolve-DnsName from win-01.",
+  "hint": "nsupdate add A internal api 10.0.2.10 then Resolve-DnsName api.internal.",
+  "track": "windows",
   "par": 1,
   "os_focus": [
-    "linux",
     "windows"
   ],
   "start": {
     "networks": {
-      "lab": "10.0.0.0/24",
-      "db-net": "10.0.2.0/24"
+      "lan": "10.0.0.0/24",
+      "db": "10.0.2.0/24"
     },
     "hosts": {
-      "client-01": {
-        "os": "linux",
+      "win-01": {
+        "os": "windows",
         "role": "client",
         "interfaces": {
-          "eth0": {
-            "network": "lab",
+          "Ethernet0": {
+            "network": "lan",
             "ip": "10.0.0.30",
             "prefix": 24,
             "state": "up"
           }
         },
-        "default_gateway": "10.0.0.1",
         "dns_servers": [
           "10.0.0.53"
         ],
@@ -36,39 +35,38 @@
         "firewall_enabled": false
       },
       "gw-01": {
-        "os": "linux",
+        "os": "windows",
         "role": "router",
         "interfaces": {
-          "eth0": {
-            "network": "lab",
+          "Ethernet0": {
+            "network": "lan",
             "ip": "10.0.0.1",
             "prefix": 24,
             "state": "up"
           },
-          "eth1": {
-            "network": "db-net",
+          "Ethernet1": {
+            "network": "db",
             "ip": "10.0.2.1",
             "prefix": 24,
             "state": "up"
           }
         },
+        "firewall_enabled": false,
         "vars": {
           "ip_forward": "1"
-        },
-        "firewall_enabled": false
+        }
       },
       "api-01": {
-        "os": "linux",
+        "os": "windows",
         "role": "api",
         "interfaces": {
-          "eth0": {
-            "network": "db-net",
+          "Ethernet0": {
+            "network": "db",
             "ip": "10.0.2.10",
             "prefix": 24,
             "state": "up"
           }
         },
-        "default_gateway": "10.0.2.1",
         "firewall_enabled": false,
         "services": {
           "8080": {
@@ -88,55 +86,66 @@
     {
       "type": "dns_resolves",
       "params": {
-        "host": "client-01",
+        "host": "win-01",
         "name": "api.internal",
         "ip": "10.0.2.10"
       },
-      "description": "api.internal resolves to 10.0.2.10"
+      "description": "api.internal → 10.0.2.10"
+    },
+    {
+      "type": "tcp_ok",
+      "params": {
+        "source": "win-01",
+        "target": "api.internal",
+        "port": 8080
+      },
+      "description": "win-01 reaches api.internal:8080"
     }
   ],
   "solution_commands": [
+    "os windows",
     "nsupdate add A internal api 10.0.2.10"
   ],
-  "track": "both",
+  "solution_commands_windows": [
+    "nsupdate add A internal api 10.0.2.10"
+  ],
   "steps": {
     "linux": [
       {
-        "title": "Fail first (optional)",
-        "command": "dig api.internal",
-        "note": "NXDOMAIN — no record yet. Diagnosis before config.",
+        "title": "Windows DNS lesson",
+        "command": "os windows"
+      },
+      {
+        "title": "Fail lookup",
+        "command": "Resolve-DnsName api.internal",
         "optional": true
       },
       {
-        "title": "Add the A record",
-        "command": "nsupdate add A internal api 10.0.2.10",
-        "note": "Lab stand-in for zone edit / cloud DNS API."
-      },
-      {
-        "title": "Resolve again",
-        "command": "dig api.internal",
-        "optional": true
+        "title": "Add A record",
+        "command": "nsupdate add A internal api 10.0.2.10"
       }
     ],
     "windows": [
       {
-        "title": "Fail first (optional)",
+        "title": "Reproduce NXDOMAIN",
         "command": "Resolve-DnsName api.internal",
+        "note": "Windows-native DNS tool (replaces nslookup for most checks).",
         "optional": true
       },
       {
-        "title": "Add the A record",
+        "title": "Publish the A record",
         "command": "nsupdate add A internal api 10.0.2.10",
-        "note": "Same zone verb on both OSes (DNS is shared infrastructure)."
+        "note": "DNS is shared infrastructure — the zone verb is the same on both OSes."
       },
       {
         "title": "Confirm resolution",
-        "command": "Resolve-DnsName api.internal",
+        "command": "Resolve-DnsName api.internal"
+      },
+      {
+        "title": "HTTP smoke test",
+        "command": "iwr http://api.internal:8080/",
         "optional": true
       }
     ]
-  },
-  "solution_commands_windows": [
-    "nsupdate add A internal api 10.0.2.10"
-  ]
+  }
 }

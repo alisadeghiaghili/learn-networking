@@ -125,5 +125,8 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "nsupdate add A payments.default.svc.cluster.local 10.96.0.20"
+  ]
 }

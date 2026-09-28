@@ -205,5 +205,12 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh etl-01",
+    "ip route add default via 10.0.10.1",
+    "nsupdate add A internal db 10.0.20.10",
+    "ssh db-01",
+    "netsh advfirewall firewall add rule name=postgres protocol=tcp localport=5432 action=allow"
+  ]
 }

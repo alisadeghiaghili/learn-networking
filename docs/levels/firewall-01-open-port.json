@@ -119,5 +119,9 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh web-01",
+    "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+  ]
 }

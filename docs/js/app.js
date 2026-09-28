@@ -413,6 +413,11 @@
           "levels/discovery-01-service-dns.json",
           "levels/discovery-02-lb.json",
           "levels/troubleshoot-01-etl-postgres.json",
+          "levels/win-01-ipconfig.json",
+          "levels/win-02-tnc-http.json",
+          "levels/win-03-firewall.json",
+          "levels/win-04-route-print.json",
+          "levels/win-05-dns-resolve.json",
         ];
         for (const path of manifest) {
           const res = await fetch(path);

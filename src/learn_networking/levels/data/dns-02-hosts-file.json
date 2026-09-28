@@ -127,5 +127,8 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "hostfile add redis.internal 10.0.20.20"
+  ]
 }

@@ -107,5 +107,8 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "New-NetIPAddress -InterfaceAlias eth0 -IPAddress 10.0.0.30 -PrefixLength 24"
+  ]
 }

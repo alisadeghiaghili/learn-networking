@@ -31,8 +31,8 @@
       s.both ||
       s.shared ||
       (track === "windows"
-        ? level.solution_commands_windows
-        : level.solution_commands_linux) ||
+        ? level.solution_commands_windows || level.solution_commands
+        : level.solution_commands_linux || level.solution_commands) ||
       level.solution_commands ||
       [];
     return list.map((step, i) => {
@@ -52,6 +52,23 @@
         check: step.check || null,
       };
     });
+  }
+
+  function solutionForTrack(level, track) {
+    if (!level) return [];
+    if (track === "windows") {
+      return (
+        level.solution_commands_windows ||
+        (level.steps && level.steps.windows && level.steps.windows.map((s) => s.command).filter(Boolean)) ||
+        level.solution_commands ||
+        []
+      );
+    }
+    return (
+      level.solution_commands_linux ||
+      level.solution_commands ||
+      []
+    );
   }
 
   /**
@@ -83,5 +100,5 @@
     return { linux, windows, shared };
   }
 
-  root.LNSteps = { TRACKS, stepsForTrack, levelsByTrack };
+  root.LNSteps = { TRACKS, stepsForTrack, solutionForTrack, levelsByTrack };
 })(typeof window !== "undefined" ? window : globalThis);

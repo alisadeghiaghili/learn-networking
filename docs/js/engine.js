@@ -1180,14 +1180,23 @@ class GameSession {
 
   showSolution(run) {
     if (!this.level) return { ok: false, error: "no level loaded" };
-    const cmds = this.level.solution_commands || [];
+    const track = (typeof localStorage !== "undefined" && localStorage.getItem("ln-track")) || "linux";
+    const cmds =
+      (track === "windows"
+        ? this.level.solution_commands_windows
+        : this.level.solution_commands_linux) ||
+      this.level.solution_commands ||
+      [];
     if (!cmds.length) return { ok: false, error: "this level has no recorded solution" };
     this.showSolutionUsed = true;
     if (!run) {
       return {
         ok: true,
         output:
-          "Reference solution (revealing this forfeits a best score):\n  " + cmds.join("\n  "),
+          "Reference solution (" +
+          track +
+          ") — revealing this forfeits a best score:\n  " +
+          cmds.join("\n  "),
       };
     }
     const outs = [];

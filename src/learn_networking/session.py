@@ -495,24 +495,27 @@ class Session:
         host.os = HostOS(os_name)
         return CommandResult.out(f"{host.name} now speaks {os_name}")
 
-    def show_solution(self, *, run: bool = False) -> CommandResult:
+    def show_solution(self, *, run: bool = False, track: str | None = None) -> CommandResult:
         """Print or run the reference solution.
 
         Args:
             run: If True, execute solution commands (non-best).
+            track: ``linux`` or ``windows`` — pick the dialect-specific solution.
 
         Returns:
             Solution text or run transcript.
         """
         if self.level is None:
             return CommandResult.fail("no level loaded")
-        cmds = self.level.solution_commands
+        if track is None:
+            track = self.current_host().os.value
+        cmds = getattr(self.level, f"solution_commands_{track}", None) or self.level.solution_commands
         if not cmds:
             return CommandResult.fail("this level has no recorded solution")
         self.state.show_solution_used = True
         if not run:
             return CommandResult.out(
-                "Reference solution (revealing this forfeits a best score):\n  "
+                f"Reference solution ({track}) — revealing this forfeits a best score:\n  "
                 + "\n  ".join(cmds)
             )
         outputs = []

@@ -135,5 +135,8 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "nsupdate add A internal api 10.0.2.10"
+  ]
 }

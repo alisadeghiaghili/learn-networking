@@ -113,5 +113,9 @@
         "optional": true
       }
     ]
-  }
+  },
+  "solution_commands_windows": [
+    "ssh api-01",
+    "docker run -d --name web -p 8080:80 nginx"
+  ]
 }
