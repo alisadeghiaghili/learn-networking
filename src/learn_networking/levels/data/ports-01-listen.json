@@ -5,15 +5,24 @@
   "objective": "Start a container on ops-01 that publishes host port 8080 (docker run style) so health checks can hit it.",
   "hint": "docker run -d --name web -p 8080:80 nginx — published ports become host listeners.",
   "par": 1,
-  "os_focus": ["linux"],
+  "os_focus": [
+    "linux"
+  ],
   "start": {
-    "networks": { "lab": "10.0.0.0/24" },
+    "networks": {
+      "lab": "10.0.0.0/24"
+    },
     "hosts": {
       "ops-01": {
         "os": "linux",
         "role": "ops",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.20", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.20",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       },
@@ -21,7 +30,12 @@
         "os": "windows",
         "role": "probe",
         "interfaces": {
-          "Ethernet0": { "network": "lab", "ip": "10.0.0.40", "prefix": 24, "state": "up" }
+          "Ethernet0": {
+            "network": "lab",
+            "ip": "10.0.0.40",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.0.0.1",
         "firewall_enabled": false
@@ -31,16 +45,69 @@
   "goal_checks": [
     {
       "type": "listening",
-      "params": { "host": "ops-01", "port": 8080, "proto": "tcp" },
+      "params": {
+        "host": "ops-01",
+        "port": 8080,
+        "proto": "tcp"
+      },
       "description": "ops-01 is listening on 8080/tcp"
     },
     {
       "type": "tcp_ok",
-      "params": { "source": "probe-01", "target": "10.0.0.20", "port": 8080 },
+      "params": {
+        "source": "probe-01",
+        "target": "10.0.0.20",
+        "port": 8080
+      },
       "description": "probe-01 can TCP-connect to ops-01:8080"
     }
   ],
   "solution_commands": [
     "docker run -d --name web -p 8080:80 nginx"
-  ]
+  ],
+  "track": "linux",
+  "steps": {
+    "linux": [
+      {
+        "title": "SSH to ops-01",
+        "command": "ssh ops-01",
+        "note": "We publish the container on this host."
+      },
+      {
+        "title": "Publish the port",
+        "command": "docker run -d --name web -p 8080:80 nginx",
+        "note": "Host 8080 forwards to container 80."
+      },
+      {
+        "title": "Check listeners",
+        "command": "ss -lntup",
+        "optional": true
+      },
+      {
+        "title": "From the probe",
+        "command": "ssh probe-01",
+        "optional": true
+      },
+      {
+        "title": "TCP test",
+        "command": "Test-NetConnection 10.0.0.20 -Port 8080",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "Note: this level is Linux-focused",
+        "command": "os linux",
+        "note": "Switch dialect, then use docker publish steps above."
+      },
+      {
+        "title": "SSH and publish",
+        "command": "ssh ops-01"
+      },
+      {
+        "title": "Publish",
+        "command": "docker run -d --name web -p 8080:80 nginx"
+      }
+    ]
+  }
 }

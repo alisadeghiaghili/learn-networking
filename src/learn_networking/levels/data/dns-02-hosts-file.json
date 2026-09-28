@@ -5,7 +5,10 @@
   "objective": "Without touching DNS, make redis.internal resolve from cache-01 via the hosts file to 10.0.20.20.",
   "hint": "hostfile add redis.internal 10.0.20.20",
   "par": 1,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
     "networks": {
       "app-net": "10.0.10.0/24",
@@ -16,7 +19,12 @@
         "os": "windows",
         "role": "cache-client",
         "interfaces": {
-          "Ethernet0": { "network": "app-net", "ip": "10.0.10.40", "prefix": 24, "state": "up" }
+          "Ethernet0": {
+            "network": "app-net",
+            "ip": "10.0.10.40",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.0.10.1",
         "firewall_enabled": false
@@ -25,22 +33,44 @@
         "os": "linux",
         "role": "router",
         "interfaces": {
-          "eth0": { "network": "app-net", "ip": "10.0.10.1", "prefix": 24, "state": "up" },
-          "eth1": { "network": "data-net", "ip": "10.0.20.1", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "app-net",
+            "ip": "10.0.10.1",
+            "prefix": 24,
+            "state": "up"
+          },
+          "eth1": {
+            "network": "data-net",
+            "ip": "10.0.20.1",
+            "prefix": 24,
+            "state": "up"
+          }
         },
-        "vars": { "ip_forward": "1" },
+        "vars": {
+          "ip_forward": "1"
+        },
         "firewall_enabled": false
       },
       "redis-01": {
         "os": "linux",
         "role": "redis",
         "interfaces": {
-          "eth0": { "network": "data-net", "ip": "10.0.20.20", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "data-net",
+            "ip": "10.0.20.20",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.0.20.1",
         "firewall_enabled": false,
         "services": {
-          "6379": { "proto": "tcp", "name": "redis", "banner": "PONG", "healthy": true }
+          "6379": {
+            "proto": "tcp",
+            "name": "redis",
+            "banner": "PONG",
+            "healthy": true
+          }
         }
       }
     },
@@ -51,16 +81,51 @@
   "goal_checks": [
     {
       "type": "dns_resolves",
-      "params": { "host": "cache-01", "name": "redis.internal", "ip": "10.0.20.20" },
+      "params": {
+        "host": "cache-01",
+        "name": "redis.internal",
+        "ip": "10.0.20.20"
+      },
       "description": "cache-01 resolves redis.internal -> 10.0.20.20"
     },
     {
       "type": "tcp_ok",
-      "params": { "source": "cache-01", "target": "redis.internal", "port": 6379 },
+      "params": {
+        "source": "cache-01",
+        "target": "redis.internal",
+        "port": 6379
+      },
       "description": "cache-01 can connect to redis.internal:6379"
     }
   ],
   "solution_commands": [
     "hostfile add redis.internal 10.0.20.20"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "Add hosts entry",
+        "command": "hostfile add redis.internal 10.0.20.20",
+        "note": "Local override — only on cache-01."
+      },
+      {
+        "title": "Verify name + port",
+        "command": "dig redis.internal",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "Add hosts entry",
+        "command": "hostfile add redis.internal 10.0.20.20",
+        "note": "Windows hosts file works the same way for one machine."
+      },
+      {
+        "title": "Confirm",
+        "command": "Resolve-DnsName redis.internal",
+        "optional": true
+      }
+    ]
+  }
 }

@@ -5,24 +5,40 @@
   "objective": "On docker-01, publish a container so host port 8080 answers HTTP 200 at / from win-01.",
   "hint": "ssh docker-01 then: docker run -d --name api -p 8080:80 nginx",
   "par": 1,
-  "os_focus": ["linux"],
+  "os_focus": [
+    "linux"
+  ],
   "start": {
-    "networks": { "lab": "172.17.0.0/24" },
+    "networks": {
+      "lab": "172.17.0.0/24"
+    },
     "hosts": {
       "docker-01": {
         "os": "linux",
         "role": "docker-host",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "172.17.0.1", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "172.17.0.1",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false,
-        "vars": { "ip_forward": "1" }
+        "vars": {
+          "ip_forward": "1"
+        }
       },
       "win-01": {
         "os": "windows",
         "role": "client",
         "interfaces": {
-          "Ethernet0": { "network": "lab", "ip": "172.17.0.50", "prefix": 24, "state": "up" }
+          "Ethernet0": {
+            "network": "lab",
+            "ip": "172.17.0.50",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "172.17.0.1",
         "firewall_enabled": false
@@ -32,12 +48,51 @@
   "goal_checks": [
     {
       "type": "http_status",
-      "params": { "source": "win-01", "target": "172.17.0.1", "port": 8080, "path": "/", "status": 200 },
+      "params": {
+        "source": "win-01",
+        "target": "172.17.0.1",
+        "port": 8080,
+        "path": "/",
+        "status": 200
+      },
       "description": "GET http://172.17.0.1:8080/ from win-01 returns 200"
     }
   ],
   "solution_commands": [
     "ssh docker-01",
     "docker run -d --name api -p 8080:80 nginx"
-  ]
+  ],
+  "track": "linux",
+  "steps": {
+    "linux": [
+      {
+        "title": "Go to the Docker host",
+        "command": "ssh docker-01"
+      },
+      {
+        "title": "Publish host 8080",
+        "command": "docker run -d --name api -p 8080:80 nginx"
+      },
+      {
+        "title": "Prove from Windows client",
+        "command": "ssh win-01",
+        "optional": true
+      },
+      {
+        "title": "HTTP check",
+        "command": "iwr http://172.17.0.1:8080/",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "SSH to docker-01",
+        "command": "ssh docker-01"
+      },
+      {
+        "title": "Publish",
+        "command": "docker run -d --name api -p 8080:80 nginx"
+      }
+    ]
+  }
 }

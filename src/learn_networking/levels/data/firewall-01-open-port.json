@@ -5,27 +5,47 @@
   "objective": "The firewall on web-01 is default-deny. Allow TCP/80 from anywhere so monitoring can scrape it.",
   "hint": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT   |   netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow",
   "par": 1,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
-    "networks": { "lab": "10.0.0.0/24" },
+    "networks": {
+      "lab": "10.0.0.0/24"
+    },
     "hosts": {
       "web-01": {
         "os": "linux",
         "role": "web",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.10", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": true,
         "firewall_rules": [],
         "services": {
-          "80": { "proto": "tcp", "name": "http", "banner": "hello from web", "healthy": true }
+          "80": {
+            "proto": "tcp",
+            "name": "http",
+            "banner": "hello from web",
+            "healthy": true
+          }
         }
       },
       "monitor-01": {
         "os": "linux",
         "role": "monitor",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.99", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.99",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       }
@@ -34,16 +54,70 @@
   "goal_checks": [
     {
       "type": "firewall_allows",
-      "params": { "host": "web-01", "proto": "tcp", "port": 80, "src": "10.0.0.99" },
+      "params": {
+        "host": "web-01",
+        "proto": "tcp",
+        "port": 80,
+        "src": "10.0.0.99"
+      },
       "description": "web-01 firewall allows tcp/80 from monitor-01"
     },
     {
       "type": "tcp_ok",
-      "params": { "source": "monitor-01", "target": "web-01", "port": 80 },
+      "params": {
+        "source": "monitor-01",
+        "target": "web-01",
+        "port": 80
+      },
       "description": "monitor-01 can connect to web-01:80"
     }
   ],
   "solution_commands": [
     "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "See default deny",
+        "command": "ssh web-01"
+      },
+      {
+        "title": "List rules",
+        "command": "iptables -L",
+        "note": "Policy DROP, no allows yet.",
+        "optional": true
+      },
+      {
+        "title": "Allow TCP/80",
+        "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+      },
+      {
+        "title": "Verify from monitor",
+        "command": "ssh monitor-01",
+        "optional": true
+      },
+      {
+        "title": "TCP test",
+        "command": "ping 10.0.0.10",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "SSH to web-01",
+        "command": "ssh web-01"
+      },
+      {
+        "title": "Allow TCP/80 (netsh)",
+        "command": "netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow"
+      },
+      {
+        "title": "Or PowerShell",
+        "command": "New-NetFirewallRule -DisplayName web -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow",
+        "note": "Lab accepts netsh; both teach the same idea.",
+        "optional": true
+      }
+    ]
+  }
 }

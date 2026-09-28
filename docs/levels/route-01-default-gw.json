@@ -5,7 +5,10 @@
   "objective": "Set 10.0.0.1 as the default gateway on client-01 so it can leave its subnet.",
   "hint": "Linux: ip route add default via 10.0.0.1  |  Windows: New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1",
   "par": 1,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
     "networks": {
       "lab": "10.0.0.0/24",
@@ -16,7 +19,12 @@
         "os": "linux",
         "role": "client",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.30", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.30",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       },
@@ -24,17 +32,34 @@
         "os": "linux",
         "role": "router",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.1", "prefix": 24, "state": "up" },
-          "eth1": { "network": "wan", "ip": "10.9.9.1", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.1",
+            "prefix": 24,
+            "state": "up"
+          },
+          "eth1": {
+            "network": "wan",
+            "ip": "10.9.9.1",
+            "prefix": 24,
+            "state": "up"
+          }
         },
-        "vars": { "ip_forward": "1" },
+        "vars": {
+          "ip_forward": "1"
+        },
         "firewall_enabled": false
       },
       "remote-01": {
         "os": "linux",
         "role": "remote",
         "interfaces": {
-          "eth0": { "network": "wan", "ip": "10.9.9.50", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "wan",
+            "ip": "10.9.9.50",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.9.9.1",
         "firewall_enabled": false
@@ -44,11 +69,51 @@
   "goal_checks": [
     {
       "type": "default_gateway",
-      "params": { "host": "client-01", "gateway": "10.0.0.1" },
+      "params": {
+        "host": "client-01",
+        "gateway": "10.0.0.1"
+      },
       "description": "client-01 default gateway is 10.0.0.1"
     }
   ],
   "solution_commands": [
     "ip route add default via 10.0.0.1"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "See current routes",
+        "command": "ip r",
+        "note": "No default route yet.",
+        "optional": true
+      },
+      {
+        "title": "Set default gateway",
+        "command": "ip route add default via 10.0.0.1",
+        "note": "0.0.0.0/0 via the router on the LAN."
+      },
+      {
+        "title": "Verify",
+        "command": "ip r",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "See routes",
+        "command": "route print",
+        "optional": true
+      },
+      {
+        "title": "Set default gateway",
+        "command": "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1"
+      },
+      {
+        "title": "Confirm goal",
+        "command": "goal",
+        "optional": true
+      }
+    ]
+  }
 }

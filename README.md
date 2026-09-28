@@ -32,6 +32,13 @@ python -m http.server 8080 --directory docs
 Same levels, same goal checks, dual OS command surfaces — terminal on the left,
 live topology and goal checklist on the right.
 
+**Tracks:** switch between **Linux** and **Windows** in the top bar. Levels are
+listed per track; shared drills include both command dialects. Each level has a
+**step-by-step guide** (click a step command to run it) — the learn-dvc
+follow-along style.
+
+**Logo / favicon:** `docs/assets/logo.svg` + `docs/favicon.svg`.
+
 ## Quick start (CLI)
 
 ```bash

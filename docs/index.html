@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>learn-networking — interactive lab for data &amp; DevOps</title>
-  <meta name="description" content="Learn networking on Linux and Windows with an LGB-style sandbox and levels. Built for data engineers and DevOps." />
+  <meta name="description" content="Learn networking on Linux and Windows with an LGB-style sandbox and step-by-step levels. Built for data engineers and DevOps." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -13,16 +14,26 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="logo" aria-hidden="true"></span>
+      <img src="assets/logo.svg" alt="learn-networking" class="logo-img" width="44" height="44" />
       <div>
-        <h1>learn-networking</h1>
-        <p>Linux + Windows · data &amp; DevOps · LGB-style levels</p>
+        <h1>learn-<span class="accent">networking</span></h1>
+        <p>Linux &amp; Windows · data &amp; DevOps · step-by-step levels</p>
       </div>
     </div>
+
+    <div class="track-switch" role="tablist" aria-label="OS track">
+      <button type="button" class="track-btn active" data-track="linux" role="tab" aria-selected="true">
+        <span class="track-dot linux"></span> Linux
+      </button>
+      <button type="button" class="track-btn" data-track="windows" role="tab" aria-selected="false">
+        <span class="track-dot windows"></span> Windows
+      </button>
+    </div>
+
     <nav class="top-actions">
       <button type="button" id="btn-levels" class="btn">Levels</button>
       <button type="button" id="btn-sandbox" class="btn">Sandbox</button>
-      <button type="button" id="btn-topo" class="btn">Topology</button>
+      <button type="button" id="btn-steps" class="btn btn-primary">Steps</button>
       <button type="button" id="btn-help" class="btn btn-ghost">Help</button>
       <a class="btn btn-ghost" href="https://github.com/alisadeghiaghili/learn-networking" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -34,6 +45,7 @@
         <div>
           <span class="pill" id="mode-pill">sandbox</span>
           <span class="muted" id="host-label">you@web-01</span>
+          <span class="pill track-pill" id="track-pill">linux track</span>
         </div>
         <div class="muted mono" id="score-label">commands 0</div>
       </div>
@@ -47,12 +59,28 @@
     </section>
 
     <aside class="side">
+      <section class="panel guide-panel" id="guide-panel">
+        <div class="panel-head">
+          <h2>Step-by-step guide</h2>
+          <div class="guide-actions">
+            <button type="button" id="btn-prev-step" class="btn btn-sm btn-ghost" title="Previous step">‹</button>
+            <button type="button" id="btn-next-step" class="btn btn-sm btn-ghost" title="Next step">›</button>
+          </div>
+        </div>
+        <div id="guide-body" class="guide-body">
+          <p class="muted guide-intro">
+            Pick a level to get a numbered walkthrough for the selected OS track.
+            Each step explains <em>why</em>, then gives the exact command.
+          </p>
+        </div>
+      </section>
+
       <section class="panel">
         <div class="panel-head">
           <h2 id="objective-title">Sandbox</h2>
           <button type="button" id="btn-hint" class="btn btn-sm">Hint</button>
         </div>
-        <p id="objective-text" class="objective">Free-play lab. Type <code>levels</code> to pick a challenge, or explore with <code>ip</code>, <code>ping</code>, <code>ssh</code>.</p>
+        <p id="objective-text" class="objective">Free-play lab. Type <code>levels</code> or press <strong>Steps</strong> after loading a level.</p>
         <div id="goal-box" class="goal-box">
           <div class="muted">Goal checks appear when a level is loaded.</div>
         </div>
@@ -76,19 +104,20 @@
   </main>
 
   <footer class="footer">
-    <span>Inspired by <a href="https://github.com/pcottle/learnGitBranching" target="_blank" rel="noopener">learnGitBranching</a></span>
-    <span class="muted">Python CLI available in the repo · MIT</span>
+    <span>Inspired by <a href="https://github.com/pcottle/learnGitBranching" target="_blank" rel="noopener">learnGitBranching</a> · step style like <a href="https://github.com/alisadeghiaghili/learn-dvc" target="_blank" rel="noopener">learn-dvc</a></span>
+    <span class="muted">Python CLI in the repo · MIT</span>
   </footer>
 
   <dialog id="levels-dialog" class="dialog">
     <div class="dialog-head">
-      <h2>Levels</h2>
+      <h2>Levels — <span id="levels-track-label">Linux</span> track</h2>
       <button type="button" class="btn btn-ghost" id="btn-close-levels">Close</button>
     </div>
     <div id="levels-body" class="levels-body"></div>
   </dialog>
 
   <script src="js/engine.js"></script>
+  <script src="js/steps.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

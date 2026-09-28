@@ -5,7 +5,10 @@
   "objective": "Incident: the nightly ETL on etl-01 cannot open Postgres on db-01:5432. Restore connectivity (route + DNS + firewall).",
   "hint": "Three faults: missing default gateway on etl-01, no DNS record for db.internal, and default-deny firewall on db-01 without a 5432 rule.",
   "par": 3,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
     "networks": {
       "app-net": "10.0.10.0/24",
@@ -16,33 +19,64 @@
         "os": "linux",
         "role": "etl",
         "interfaces": {
-          "eth0": { "network": "app-net", "ip": "10.0.10.50", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "app-net",
+            "ip": "10.0.10.50",
+            "prefix": 24,
+            "state": "up"
+          }
         },
-        "dns_servers": ["10.0.10.2"],
-        "search_domains": ["internal"],
+        "dns_servers": [
+          "10.0.10.2"
+        ],
+        "search_domains": [
+          "internal"
+        ],
         "firewall_enabled": false
       },
       "core-01": {
         "os": "linux",
         "role": "router",
         "interfaces": {
-          "eth0": { "network": "app-net", "ip": "10.0.10.1", "prefix": 24, "state": "up" },
-          "eth1": { "network": "db-net", "ip": "10.0.20.1", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "app-net",
+            "ip": "10.0.10.1",
+            "prefix": 24,
+            "state": "up"
+          },
+          "eth1": {
+            "network": "db-net",
+            "ip": "10.0.20.1",
+            "prefix": 24,
+            "state": "up"
+          }
         },
-        "vars": { "ip_forward": "1" },
+        "vars": {
+          "ip_forward": "1"
+        },
         "firewall_enabled": false
       },
       "db-01": {
         "os": "windows",
         "role": "db",
         "interfaces": {
-          "Ethernet0": { "network": "db-net", "ip": "10.0.20.10", "prefix": 24, "state": "up" }
+          "Ethernet0": {
+            "network": "db-net",
+            "ip": "10.0.20.10",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.0.20.1",
         "firewall_enabled": true,
         "firewall_rules": [],
         "services": {
-          "5432": { "proto": "tcp", "name": "postgres", "banner": "PostgreSQL 16.2", "healthy": true }
+          "5432": {
+            "proto": "tcp",
+            "name": "postgres",
+            "banner": "PostgreSQL 16.2",
+            "healthy": true
+          }
         }
       }
     },
@@ -53,22 +87,38 @@
   "goal_checks": [
     {
       "type": "default_gateway",
-      "params": { "host": "etl-01", "gateway": "10.0.10.1" },
+      "params": {
+        "host": "etl-01",
+        "gateway": "10.0.10.1"
+      },
       "description": "etl-01 default gateway is 10.0.10.1"
     },
     {
       "type": "dns_resolves",
-      "params": { "host": "etl-01", "name": "db.internal", "ip": "10.0.20.10" },
+      "params": {
+        "host": "etl-01",
+        "name": "db.internal",
+        "ip": "10.0.20.10"
+      },
       "description": "db.internal resolves to 10.0.20.10"
     },
     {
       "type": "firewall_allows",
-      "params": { "host": "db-01", "proto": "tcp", "port": 5432, "src": "10.0.10.50" },
+      "params": {
+        "host": "db-01",
+        "proto": "tcp",
+        "port": 5432,
+        "src": "10.0.10.50"
+      },
       "description": "db-01 allows tcp/5432 from etl-01"
     },
     {
       "type": "tcp_ok",
-      "params": { "source": "etl-01", "target": "db.internal", "port": 5432 },
+      "params": {
+        "source": "etl-01",
+        "target": "db.internal",
+        "port": 5432
+      },
       "description": "etl-01 can TCP-connect to db.internal:5432"
     }
   ],
@@ -77,5 +127,83 @@
     "nsupdate add A internal db 10.0.20.10",
     "ssh db-01",
     "netsh advfirewall firewall add rule name=postgres protocol=tcp localport=5432 action=allow"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "1. Reproduce",
+        "command": "ping db.internal",
+        "note": "Name may fail — log both DNS and L3 results.",
+        "optional": true
+      },
+      {
+        "title": "2. Fix routing",
+        "command": "ip route add default via 10.0.10.1",
+        "note": "ETL has no default gateway — first layer."
+      },
+      {
+        "title": "3. Fix DNS",
+        "command": "nsupdate add A internal db 10.0.20.10",
+        "note": "db.internal must resolve to db-01."
+      },
+      {
+        "title": "4. Open the DB firewall",
+        "command": "ssh db-01"
+      },
+      {
+        "title": "5. Allow Postgres",
+        "command": "netsh advfirewall firewall add rule name=postgres protocol=tcp localport=5432 action=allow",
+        "note": "db-01 is a Windows host in this incident."
+      },
+      {
+        "title": "6. Prove end-to-end",
+        "command": "ssh etl-01",
+        "optional": true
+      },
+      {
+        "title": "7. TCP to Postgres",
+        "command": "Test-NetConnection db.internal -Port 5432",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "1. Reproduce",
+        "command": "Test-NetConnection db.internal -Port 5432",
+        "optional": true
+      },
+      {
+        "title": "2. Fix routing on ETL",
+        "command": "ssh etl-01"
+      },
+      {
+        "title": "Default gateway",
+        "command": "ip route add default via 10.0.10.1",
+        "note": "Works on the Linux ETL host; use New-NetRoute on Windows hosts."
+      },
+      {
+        "title": "3. DNS",
+        "command": "nsupdate add A internal db 10.0.20.10"
+      },
+      {
+        "title": "4. Firewall on db-01",
+        "command": "ssh db-01"
+      },
+      {
+        "title": "5. Allow 5432",
+        "command": "netsh advfirewall firewall add rule name=postgres protocol=tcp localport=5432 action=allow"
+      },
+      {
+        "title": "6. Prove",
+        "command": "ssh etl-01",
+        "optional": true
+      },
+      {
+        "title": "7. Final check",
+        "command": "Test-NetConnection db.internal -Port 5432",
+        "optional": true
+      }
+    ]
+  }
 }

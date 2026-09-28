@@ -5,7 +5,9 @@
   "objective": "Open tcp/80 on web-a and web-b so pod-01 can reach both backends and the VIP returns HTTP 200.",
   "hint": "ssh web-a and web-b, then iptables -A INPUT -p tcp --dport 80 -j ACCEPT on each.",
   "par": 2,
-  "os_focus": ["linux"],
+  "os_focus": [
+    "linux"
+  ],
   "start": {
     "networks": {
       "pod-net": "10.244.0.0/24",
@@ -16,7 +18,12 @@
         "os": "linux",
         "role": "pod",
         "interfaces": {
-          "eth0": { "network": "pod-net", "ip": "10.244.0.10", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "pod-net",
+            "ip": "10.244.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       },
@@ -24,35 +31,65 @@
         "os": "linux",
         "role": "pod",
         "interfaces": {
-          "eth0": { "network": "pod-net", "ip": "10.244.0.11", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "pod-net",
+            "ip": "10.244.0.11",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": true,
         "firewall_rules": [],
         "services": {
-          "80": { "proto": "tcp", "name": "http", "banner": "backend-a", "healthy": true }
+          "80": {
+            "proto": "tcp",
+            "name": "http",
+            "banner": "backend-a",
+            "healthy": true
+          }
         }
       },
       "web-b": {
         "os": "linux",
         "role": "pod",
         "interfaces": {
-          "eth0": { "network": "pod-net", "ip": "10.244.0.12", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "pod-net",
+            "ip": "10.244.0.12",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": true,
         "firewall_rules": [],
         "services": {
-          "80": { "proto": "tcp", "name": "http", "banner": "backend-b", "healthy": true }
+          "80": {
+            "proto": "tcp",
+            "name": "http",
+            "banner": "backend-b",
+            "healthy": true
+          }
         }
       },
       "web-vip": {
         "os": "linux",
         "role": "svc",
         "interfaces": {
-          "eth0": { "network": "svc-net", "ip": "10.96.0.20", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "svc-net",
+            "ip": "10.96.0.20",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false,
         "services": {
-          "80": { "proto": "tcp", "name": "web-lb", "banner": "hello from web", "healthy": true }
+          "80": {
+            "proto": "tcp",
+            "name": "web-lb",
+            "banner": "hello from web",
+            "healthy": true
+          }
         }
       }
     }
@@ -60,17 +97,31 @@
   "goal_checks": [
     {
       "type": "tcp_ok",
-      "params": { "source": "pod-01", "target": "10.244.0.11", "port": 80 },
+      "params": {
+        "source": "pod-01",
+        "target": "10.244.0.11",
+        "port": 80
+      },
       "description": "pod-01 -> web-a:80 open"
     },
     {
       "type": "tcp_ok",
-      "params": { "source": "pod-01", "target": "10.244.0.12", "port": 80 },
+      "params": {
+        "source": "pod-01",
+        "target": "10.244.0.12",
+        "port": 80
+      },
       "description": "pod-01 -> web-b:80 open"
     },
     {
       "type": "http_status",
-      "params": { "source": "pod-01", "target": "10.96.0.20", "port": 80, "path": "/", "status": 200 },
+      "params": {
+        "source": "pod-01",
+        "target": "10.96.0.20",
+        "port": 80,
+        "path": "/",
+        "status": 200
+      },
       "description": "GET http://10.96.0.20/ returns 200"
     }
   ],
@@ -79,5 +130,50 @@
     "iptables -A INPUT -p tcp --dport 80 -j ACCEPT",
     "ssh web-b",
     "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
-  ]
+  ],
+  "track": "linux",
+  "steps": {
+    "linux": [
+      {
+        "title": "Open backend A",
+        "command": "ssh web-a"
+      },
+      {
+        "title": "Allow HTTP on A",
+        "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+      },
+      {
+        "title": "Open backend B",
+        "command": "ssh web-b"
+      },
+      {
+        "title": "Allow HTTP on B",
+        "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+      },
+      {
+        "title": "Verify VIP",
+        "command": "curl http://10.96.0.20/",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "SSH and open both backends",
+        "command": "ssh web-a",
+        "note": "Repeat the allow on web-b (Linux firewall in the lab)."
+      },
+      {
+        "title": "Allow on A",
+        "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+      },
+      {
+        "title": "Allow on B",
+        "command": "ssh web-b"
+      },
+      {
+        "title": "Allow on B",
+        "command": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+      }
+    ]
+  }
 }

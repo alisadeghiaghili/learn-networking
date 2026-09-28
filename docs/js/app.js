@@ -1,5 +1,5 @@
 /**
- * learn-networking web UI controller.
+ * learn-networking web UI controller — dual-track guide + terminal.
  */
 "use strict";
 
@@ -17,11 +17,23 @@
   const modePill = document.getElementById("mode-pill");
   const hostLabel = document.getElementById("host-label");
   const scoreLabel = document.getElementById("score-label");
+  const trackPill = document.getElementById("track-pill");
+  const guideBody = document.getElementById("guide-body");
   const levelsDialog = document.getElementById("levels-dialog");
   const levelsBody = document.getElementById("levels-body");
+  const levelsTrackLabel = document.getElementById("levels-track-label");
 
+  let track = localStorage.getItem("ln-track") || "linux";
+  let activeStep = 0;
   const history = [];
   let historyIdx = -1;
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  }
 
   function appendLine(text, cls) {
     const div = document.createElement("div");
@@ -32,8 +44,99 @@
   }
 
   function appendBlock(text, cls) {
-    const lines = String(text).split("\n");
-    for (const line of lines) appendLine(line, cls);
+    for (const line of String(text).split("\n")) appendLine(line, cls);
+  }
+
+  function currentSteps() {
+    return LNSteps.stepsForTrack(session.level, track);
+  }
+
+  function markStepDone(step) {
+    if (!step.command) return true;
+    const cmd = step.command.trim().toLowerCase();
+    const optional = !!step.optional;
+    // done if the command appears in history (or goal checks all pass at end)
+    const hit = session.commandLog.some((c) => {
+      const a = c.trim().toLowerCase();
+      return a === cmd || a.startsWith(cmd) || cmd.startsWith(a) && a.length > 4;
+    });
+    return hit || (optional && session.solved);
+  }
+
+  function renderGuide() {
+    const steps = currentSteps();
+    if (!session.level || !steps.length) {
+      guideBody.innerHTML =
+        '<p class="muted guide-intro">Pick a level to get a numbered walkthrough for the <strong>' +
+        escapeHtml(LNSteps.TRACKS[track].label) +
+        "</strong> track.<br/>Each step explains <em>why</em>, then gives the exact command.<br/>Click a command to copy it into the terminal.</p>";
+      return;
+    }
+
+    // auto-advance active step while earlier ones complete
+    let firstPending = steps.findIndex((s) => !markStepDone(s));
+    if (firstPending === -1) firstPending = steps.length - 1;
+    if (activeStep > steps.length - 1) activeStep = firstPending;
+
+    guideBody.innerHTML = "";
+    const header = document.createElement("div");
+    header.className = "muted";
+    header.style.marginBottom = "0.65rem";
+    header.innerHTML =
+      "<strong>" +
+      escapeHtml(session.level.name) +
+      "</strong> · " +
+      escapeHtml(LNSteps.TRACKS[track].label) +
+      " track · follow the steps in order.";
+    guideBody.appendChild(header);
+
+    steps.forEach((step, i) => {
+      const done = markStepDone(step);
+      const el = document.createElement("div");
+      el.className =
+        "step" +
+        (done ? " done" : "") +
+        (i === activeStep ? " active" : "") +
+        (step.optional ? " optional" : "");
+      el.innerHTML =
+        '<div class="step-num">' +
+        (done ? "✓" : i + 1) +
+        "</div><div><div class=\"step-title\">" +
+        escapeHtml(step.title) +
+        "</div>" +
+        (step.command
+          ? '<code class="step-cmd" data-cmd="' +
+            escapeHtml(step.command) +
+            '" title="Click to run">' +
+            escapeHtml(step.command) +
+            "</code>"
+          : "") +
+        (step.note
+          ? '<div class="step-note">' + escapeHtml(step.note) + "</div>"
+          : "") +
+        "</div>";
+      el.addEventListener("click", (e) => {
+        if (e.target.classList.contains("step-cmd")) return;
+        activeStep = i;
+        renderGuide();
+      });
+      guideBody.appendChild(el);
+    });
+
+    guideBody.querySelectorAll(".step-cmd").forEach((code) => {
+      code.addEventListener("click", () => {
+        const cmd = code.getAttribute("data-cmd");
+        termInput.value = cmd;
+        termInput.focus();
+        // run immediately for faster follow-along
+        termInput.value = "";
+        runCommand(cmd);
+      });
+    });
+
+    // scroll active into view
+    const active = guideBody.querySelector(".step.active");
+    if (active) active.scrollIntoView({ block: "nearest" });
   }
 
   function refreshChrome() {
@@ -42,6 +145,8 @@
     hostLabel.textContent = session.currentHost + " · " + h.os;
     modePill.textContent = session.level ? session.level.id : "sandbox";
     scoreLabel.textContent = "commands " + session.commandsIssued;
+    trackPill.textContent = track + " track";
+    trackPill.classList.toggle("windows-track", track === "windows");
 
     if (session.level) {
       objectiveTitle.textContent = session.level.name;
@@ -49,10 +154,9 @@
     } else {
       objectiveTitle.textContent = "Sandbox";
       objectiveText.innerHTML =
-        "Free-play lab. Type <code>levels</code> to pick a challenge, or explore with <code>ip</code>, <code>ping</code>, <code>ssh</code>.";
+        "Free-play lab. Type <code>levels</code> or press <strong>Steps</strong> after loading a level.";
     }
 
-    // goals
     if (session.level) {
       const checks = session.level.goal_checks.map((c) =>
         LearnNetworking.evaluateCheck(c, session.world, session.currentHost)
@@ -65,7 +169,7 @@
         item.innerHTML =
           '<div class="goal-mark">' +
           (r.ok ? "✓" : "") +
-          "</div><div><div class=\"goal-title\">" +
+          '</div><div><div class="goal-title">' +
           escapeHtml(check.description || check.type) +
           '</div><div class="goal-detail">' +
           escapeHtml(r.detail) +
@@ -96,12 +200,13 @@
       const host = session.world.hosts[name];
       const li = document.createElement("li");
       if (name === session.currentHost) li.classList.add("active");
-      const ip = (function () {
-        for (const iface of Object.values(host.interfaces)) {
-          if (iface.ip !== null) return LearnNetworking.formatIPv4(iface.ip);
+      let ip = "-";
+      for (const iface of Object.values(host.interfaces)) {
+        if (iface.ip !== null) {
+          ip = LearnNetworking.formatIPv4(iface.ip);
+          break;
         }
-        return "-";
-      })();
+      }
       li.innerHTML =
         '<div><div class="host-name">' +
         escapeHtml(name) +
@@ -114,26 +219,16 @@
         host.os +
         "</span>";
       li.addEventListener("click", () => {
-        const r = session.execute("ssh " + name);
-        appendLine("you@local$ ssh " + name, "line-cmd");
-        if (r.output) appendBlock(r.output);
-        if (r.error) appendBlock(r.error, "line-err");
-        refreshChrome();
-        termInput.focus();
+        runCommand("ssh " + name);
       });
       hostList.appendChild(li);
     }
-  }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;");
+    renderGuide();
   }
 
   function runCommand(raw) {
-    const line = raw.trim();
+    const line = (raw || "").trim();
     if (!line) return;
     appendLine(session.prompt() + " " + line, "line-cmd");
     history.push(line);
@@ -145,6 +240,15 @@
       if (result.output) appendBlock(result.output);
       if (result.error) appendBlock(result.error, "line-err");
     }
+
+    // advance guide to next incomplete step
+    const steps = currentSteps();
+    if (steps.length) {
+      let next = steps.findIndex((s) => !markStepDone(s));
+      if (next === -1) next = steps.length - 1;
+      activeStep = next;
+    }
+
     refreshChrome();
   }
 
@@ -174,9 +278,33 @@
     }
   });
 
+  function setTrack(next) {
+    track = next === "windows" ? "windows" : "linux";
+    localStorage.setItem("ln-track", track);
+    document.querySelectorAll(".track-btn").forEach((btn) => {
+      const on = btn.getAttribute("data-track") === track;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    // prefer the track OS on current host for a cleaner prompt
+    if (session.world && session.currentHost) {
+      const host = session.host();
+      const desired = track === "windows" ? "windows" : "linux";
+      if (host.os !== desired && session.level && session.level.track === "both") {
+        // leave host OS alone — commands are dual
+      }
+    }
+    activeStep = 0;
+    if (levelsDialog.open) openLevels();
+    refreshChrome();
+  }
+
   function openLevels() {
+    levelsTrackLabel.textContent = LNSteps.TRACKS[track].label;
+    const buckets = LNSteps.levelsByTrack(session.catalog);
+    const list = (buckets[track] || []).slice().sort((a, b) => a.id.localeCompare(b.id));
     const seqs = {};
-    for (const level of Object.values(session.catalog)) {
+    for (const level of list) {
       (seqs[level.sequence] = seqs[level.sequence] || []).push(level);
     }
     const order = [
@@ -189,25 +317,24 @@
       ["discovery", "Service Discovery & LB", "ClusterIP DNS and backends"],
       ["troubleshoot", "Incident Drill", "Layered debugging"],
     ];
-    levelsBody.innerHTML = "";
+    levelsBody.innerHTML =
+      '<p class="muted" style="margin:0 0 0.85rem">Levels available on the <strong>' +
+      escapeHtml(LNSteps.TRACKS[track].label) +
+      "</strong> track. Shared drills appear on both tracks with dual commands.</p>";
     for (const [key, title, about] of order) {
-      const list = (seqs[key] || []).sort((a, b) => a.id.localeCompare(b.id));
-      if (!list.length) continue;
+      const group = seqs[key] || [];
+      if (!group.length) continue;
       const sec = document.createElement("section");
       sec.className = "sequence";
       sec.innerHTML =
-        "<h3>" +
-        escapeHtml(title) +
-        '</h3><p class="about">' +
-        escapeHtml(about) +
-        "</p>";
-      for (const level of list) {
+        "<h3>" + escapeHtml(title) + '</h3><p class="about">' + escapeHtml(about) + "</p>";
+      for (const level of group) {
         const p = session.progress[level.id];
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "level-row";
         btn.innerHTML =
-          "<div><div class=\"id\">" +
+          '<div><div class="id">' +
           escapeHtml(level.id) +
           '</div><div class="name">' +
           escapeHtml(level.name) +
@@ -219,6 +346,7 @@
           "</div>";
         btn.addEventListener("click", () => {
           levelsDialog.close();
+          activeStep = 0;
           runCommand("level " + level.id);
         });
         sec.appendChild(btn);
@@ -234,9 +362,11 @@
   });
   document.getElementById("btn-sandbox").addEventListener("click", () => {
     runCommand("sandbox");
+    activeStep = 0;
   });
-  document.getElementById("btn-topo").addEventListener("click", () => {
-    runCommand("topo");
+  document.getElementById("btn-steps").addEventListener("click", () => {
+    renderGuide();
+    document.getElementById("guide-panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
   document.getElementById("btn-help").addEventListener("click", () => {
     runCommand("help");
@@ -247,16 +377,27 @@
   document.getElementById("btn-refresh-topo").addEventListener("click", () => {
     refreshChrome();
   });
+  document.getElementById("btn-prev-step").addEventListener("click", () => {
+    activeStep = Math.max(0, activeStep - 1);
+    renderGuide();
+  });
+  document.getElementById("btn-next-step").addEventListener("click", () => {
+    const steps = currentSteps();
+    activeStep = Math.min(steps.length ? steps.length - 1 : 0, activeStep + 1);
+    renderGuide();
+  });
+
+  document.querySelectorAll(".track-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setTrack(btn.getAttribute("data-track")));
+  });
 
   async function boot() {
     appendLine("learn-networking — interactive lab for data & DevOps networking", "line-meta");
-    appendLine("Type 'help' for commands, 'levels' for challenges, 'topo' for the map.", "line-meta");
+    appendLine("Pick a track (Linux / Windows), open Levels, then follow the step-by-step guide.", "line-meta");
     appendLine("");
 
     try {
-      const ids = Object.values(session.catalog).length;
-      if (!ids) {
-        // load levels from JSON files
+      if (!Object.keys(session.catalog).length) {
         const manifest = [
           "levels/link-01-address.json",
           "levels/link-02-ping.json",
@@ -286,6 +427,7 @@
 
     appendBlock(session.renderTopology(), "line-meta");
     appendLine("");
+    setTrack(track);
     refreshChrome();
     termInput.focus();
   }

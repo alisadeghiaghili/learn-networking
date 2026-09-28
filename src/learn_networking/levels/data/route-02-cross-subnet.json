@@ -5,7 +5,10 @@
   "objective": "Give client-01 a default route via 10.0.0.1 so it can reach the database network 10.0.2.0/24 at 10.0.2.10.",
   "hint": "Both sides need routes: client-01 out via 10.0.0.1. The router already forwards. Prove it with ping 10.0.2.10.",
   "par": 1,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
     "networks": {
       "lab": "10.0.0.0/24",
@@ -16,7 +19,12 @@
         "os": "linux",
         "role": "client",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.30", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.30",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       },
@@ -24,22 +32,44 @@
         "os": "linux",
         "role": "router",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.1", "prefix": 24, "state": "up" },
-          "eth1": { "network": "db-net", "ip": "10.0.2.1", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.1",
+            "prefix": 24,
+            "state": "up"
+          },
+          "eth1": {
+            "network": "db-net",
+            "ip": "10.0.2.1",
+            "prefix": 24,
+            "state": "up"
+          }
         },
-        "vars": { "ip_forward": "1" },
+        "vars": {
+          "ip_forward": "1"
+        },
         "firewall_enabled": false
       },
       "db-01": {
         "os": "linux",
         "role": "db",
         "interfaces": {
-          "eth0": { "network": "db-net", "ip": "10.0.2.10", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "db-net",
+            "ip": "10.0.2.10",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.0.2.1",
         "firewall_enabled": false,
         "services": {
-          "5432": { "proto": "tcp", "name": "postgres", "banner": "PostgreSQL 16", "healthy": true }
+          "5432": {
+            "proto": "tcp",
+            "name": "postgres",
+            "banner": "PostgreSQL 16",
+            "healthy": true
+          }
         }
       }
     }
@@ -47,16 +77,53 @@
   "goal_checks": [
     {
       "type": "default_gateway",
-      "params": { "host": "client-01", "gateway": "10.0.0.1" },
+      "params": {
+        "host": "client-01",
+        "gateway": "10.0.0.1"
+      },
       "description": "client-01 uses 10.0.0.1 as default gateway"
     },
     {
       "type": "ping_ok",
-      "params": { "source": "client-01", "target": "10.0.2.10" },
+      "params": {
+        "source": "client-01",
+        "target": "10.0.2.10"
+      },
       "description": "client-01 can ping db-01 across subnets"
     }
   ],
   "solution_commands": [
     "ip route add default via 10.0.0.1"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "Notice the two subnets",
+        "command": "topo",
+        "note": "10.0.0.0/24 and 10.0.2.0/24 — needs a gateway.",
+        "optional": true
+      },
+      {
+        "title": "Default route via gw-01",
+        "command": "ip route add default via 10.0.0.1"
+      },
+      {
+        "title": "Ping across subnets",
+        "command": "ping 10.0.2.10",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "Default route",
+        "command": "New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1"
+      },
+      {
+        "title": "Cross-subnet ping",
+        "command": "Test-NetConnection 10.0.2.10",
+        "optional": true
+      }
+    ]
+  }
 }

@@ -5,22 +5,36 @@
   "objective": "Assign 10.0.0.30/24 to eth0 on client-01 and bring the link up.",
   "hint": "Linux: ip addr add 10.0.0.30/24 dev eth0  |  Windows: New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24",
   "par": 1,
-  "os_focus": ["linux", "windows"],
+  "os_focus": [
+    "linux",
+    "windows"
+  ],
   "start": {
-    "networks": { "lab": "10.0.0.0/24" },
+    "networks": {
+      "lab": "10.0.0.0/24"
+    },
     "hosts": {
       "client-01": {
         "os": "linux",
         "role": "client",
         "interfaces": {
-          "eth0": { "network": "lab", "state": "down", "mac": "02:00:00:00:00:30" }
+          "eth0": {
+            "network": "lab",
+            "state": "down",
+            "mac": "02:00:00:00:00:30"
+          }
         }
       },
       "server-01": {
         "os": "linux",
         "role": "server",
         "interfaces": {
-          "eth0": { "network": "lab", "ip": "10.0.0.10", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "lab",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          }
         }
       }
     }
@@ -28,16 +42,70 @@
   "goal_checks": [
     {
       "type": "has_ip",
-      "params": { "host": "client-01", "iface": "eth0", "ip": "10.0.0.30", "prefix": 24 },
+      "params": {
+        "host": "client-01",
+        "iface": "eth0",
+        "ip": "10.0.0.30",
+        "prefix": 24
+      },
       "description": "client-01 eth0 has 10.0.0.30/24"
     },
     {
       "type": "iface_up",
-      "params": { "host": "client-01", "iface": "eth0" },
+      "params": {
+        "host": "client-01",
+        "iface": "eth0"
+      },
       "description": "client-01 eth0 is up"
     }
   ],
   "solution_commands": [
     "ip addr add 10.0.0.30/24 dev eth0"
-  ]
+  ],
+  "track": "both",
+  "steps": {
+    "linux": [
+      {
+        "title": "Inspect the interface",
+        "command": "ip a",
+        "note": "See eth0 is down and has no address.",
+        "optional": true
+      },
+      {
+        "title": "Assign 10.0.0.30/24",
+        "command": "ip addr add 10.0.0.30/24 dev eth0",
+        "note": "IP + prefix length + interface name. This also brings the link up in the lab."
+      },
+      {
+        "title": "Confirm",
+        "command": "goal",
+        "note": "Both goal checks should be green.",
+        "optional": true
+      }
+    ],
+    "windows": [
+      {
+        "title": "Inspect adapters",
+        "command": "Get-NetAdapter",
+        "note": "Find the adapter name (eth0 in this lab).",
+        "optional": true
+      },
+      {
+        "title": "Assign address",
+        "command": "New-NetIPAddress -InterfaceAlias eth0 -IPAddress 10.0.0.30 -PrefixLength 24",
+        "note": "InterfaceAlias matches the adapter name. PrefixLength 24 = /24 subnet."
+      },
+      {
+        "title": "Confirm with ipconfig",
+        "command": "ipconfig",
+        "note": "You should see IPv4 10.0.0.30.",
+        "optional": true
+      },
+      {
+        "title": "Check goal",
+        "command": "goal",
+        "optional": true
+      }
+    ]
+  }
 }

@@ -5,7 +5,9 @@
   "objective": "bastion-01 has a default-deny firewall. Allow only TCP/22 from 10.0.0.0/24 and keep it closed to 10.9.9.50.",
   "hint": "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT",
   "par": 1,
-  "os_focus": ["linux"],
+  "os_focus": [
+    "linux"
+  ],
   "start": {
     "networks": {
       "admin": "10.0.0.0/24",
@@ -16,20 +18,40 @@
         "os": "linux",
         "role": "bastion",
         "interfaces": {
-          "eth0": { "network": "admin", "ip": "10.0.0.10", "prefix": 24, "state": "up" },
-          "eth1": { "network": "wan", "ip": "10.9.9.10", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "admin",
+            "ip": "10.0.0.10",
+            "prefix": 24,
+            "state": "up"
+          },
+          "eth1": {
+            "network": "wan",
+            "ip": "10.9.9.10",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": true,
         "firewall_rules": [],
         "services": {
-          "22": { "proto": "tcp", "name": "ssh", "banner": "OpenSSH", "healthy": true }
+          "22": {
+            "proto": "tcp",
+            "name": "ssh",
+            "banner": "OpenSSH",
+            "healthy": true
+          }
         }
       },
       "admin-01": {
         "os": "linux",
         "role": "admin",
         "interfaces": {
-          "eth0": { "network": "admin", "ip": "10.0.0.5", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "admin",
+            "ip": "10.0.0.5",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "firewall_enabled": false
       },
@@ -37,7 +59,12 @@
         "os": "linux",
         "role": "internet",
         "interfaces": {
-          "eth0": { "network": "wan", "ip": "10.9.9.50", "prefix": 24, "state": "up" }
+          "eth0": {
+            "network": "wan",
+            "ip": "10.9.9.50",
+            "prefix": 24,
+            "state": "up"
+          }
         },
         "default_gateway": "10.9.9.10",
         "firewall_enabled": false
@@ -47,16 +74,53 @@
   "goal_checks": [
     {
       "type": "firewall_allows",
-      "params": { "host": "bastion-01", "proto": "tcp", "port": 22, "src": "10.0.0.5" },
+      "params": {
+        "host": "bastion-01",
+        "proto": "tcp",
+        "port": 22,
+        "src": "10.0.0.5"
+      },
       "description": "admin subnet may reach bastion:22"
     },
     {
       "type": "firewall_denies",
-      "params": { "host": "bastion-01", "proto": "tcp", "port": 22, "src": "10.9.9.50" },
+      "params": {
+        "host": "bastion-01",
+        "proto": "tcp",
+        "port": 22,
+        "src": "10.9.9.50"
+      },
       "description": "internet host may not reach bastion:22"
     }
   ],
   "solution_commands": [
     "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT"
-  ]
+  ],
+  "track": "linux",
+  "steps": {
+    "linux": [
+      {
+        "title": "Understand the requirement",
+        "command": "goal",
+        "note": "Allow 22 from 10.0.0.0/24 only; keep 10.9.9.50 out.",
+        "optional": true
+      },
+      {
+        "title": "Targeted allow",
+        "command": "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT",
+        "note": "Source-scoped rule — the security-group pattern."
+      }
+    ],
+    "windows": [
+      {
+        "title": "Switch to Linux dialect",
+        "command": "os linux",
+        "note": "This drill is iptables-focused; the idea maps to netsh too."
+      },
+      {
+        "title": "Targeted allow",
+        "command": "iptables -A INPUT -p tcp --dport 22 -s 10.0.0.0/24 -j ACCEPT"
+      }
+    ]
+  }
 }
