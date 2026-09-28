@@ -1,0 +1,49 @@
+{
+  "id": "firewall-01-open-port",
+  "sequence": "firewall",
+  "name": "Open the Right Port",
+  "objective": "The firewall on web-01 is default-deny. Allow TCP/80 from anywhere so monitoring can scrape it.",
+  "hint": "iptables -A INPUT -p tcp --dport 80 -j ACCEPT   |   netsh advfirewall firewall add rule name=web protocol=tcp localport=80 action=allow",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": { "lab": "10.0.0.0/24" },
+    "hosts": {
+      "web-01": {
+        "os": "linux",
+        "role": "web",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.10", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": true,
+        "firewall_rules": [],
+        "services": {
+          "80": { "proto": "tcp", "name": "http", "banner": "hello from web", "healthy": true }
+        }
+      },
+      "monitor-01": {
+        "os": "linux",
+        "role": "monitor",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.99", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "firewall_allows",
+      "params": { "host": "web-01", "proto": "tcp", "port": 80, "src": "10.0.0.99" },
+      "description": "web-01 firewall allows tcp/80 from monitor-01"
+    },
+    {
+      "type": "tcp_ok",
+      "params": { "source": "monitor-01", "target": "web-01", "port": 80 },
+      "description": "monitor-01 can connect to web-01:80"
+    }
+  ],
+  "solution_commands": [
+    "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+  ]
+}

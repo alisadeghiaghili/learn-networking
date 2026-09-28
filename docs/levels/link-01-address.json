@@ -1,0 +1,43 @@
+{
+  "id": "link-01-address",
+  "sequence": "link",
+  "name": "Give It an Address",
+  "objective": "Assign 10.0.0.30/24 to eth0 on client-01 and bring the link up.",
+  "hint": "Linux: ip addr add 10.0.0.30/24 dev eth0  |  Windows: New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress 10.0.0.30 -PrefixLength 24",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": { "lab": "10.0.0.0/24" },
+    "hosts": {
+      "client-01": {
+        "os": "linux",
+        "role": "client",
+        "interfaces": {
+          "eth0": { "network": "lab", "state": "down", "mac": "02:00:00:00:00:30" }
+        }
+      },
+      "server-01": {
+        "os": "linux",
+        "role": "server",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.10", "prefix": 24, "state": "up" }
+        }
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "has_ip",
+      "params": { "host": "client-01", "iface": "eth0", "ip": "10.0.0.30", "prefix": 24 },
+      "description": "client-01 eth0 has 10.0.0.30/24"
+    },
+    {
+      "type": "iface_up",
+      "params": { "host": "client-01", "iface": "eth0" },
+      "description": "client-01 eth0 is up"
+    }
+  ],
+  "solution_commands": [
+    "ip addr add 10.0.0.30/24 dev eth0"
+  ]
+}

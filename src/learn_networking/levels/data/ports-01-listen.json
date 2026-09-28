@@ -1,0 +1,46 @@
+{
+  "id": "ports-01-listen",
+  "sequence": "ports",
+  "name": "Listen Up",
+  "objective": "Start a container on ops-01 that publishes host port 8080 (docker run style) so health checks can hit it.",
+  "hint": "docker run -d --name web -p 8080:80 nginx — published ports become host listeners.",
+  "par": 1,
+  "os_focus": ["linux"],
+  "start": {
+    "networks": { "lab": "10.0.0.0/24" },
+    "hosts": {
+      "ops-01": {
+        "os": "linux",
+        "role": "ops",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.20", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false
+      },
+      "probe-01": {
+        "os": "windows",
+        "role": "probe",
+        "interfaces": {
+          "Ethernet0": { "network": "lab", "ip": "10.0.0.40", "prefix": 24, "state": "up" }
+        },
+        "default_gateway": "10.0.0.1",
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "listening",
+      "params": { "host": "ops-01", "port": 8080, "proto": "tcp" },
+      "description": "ops-01 is listening on 8080/tcp"
+    },
+    {
+      "type": "tcp_ok",
+      "params": { "source": "probe-01", "target": "10.0.0.20", "port": 8080 },
+      "description": "probe-01 can TCP-connect to ops-01:8080"
+    }
+  ],
+  "solution_commands": [
+    "docker run -d --name web -p 8080:80 nginx"
+  ]
+}

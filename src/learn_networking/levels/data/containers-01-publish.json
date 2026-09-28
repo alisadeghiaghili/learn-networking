@@ -1,0 +1,43 @@
+{
+  "id": "containers-01-publish",
+  "sequence": "containers",
+  "name": "Publish the Port",
+  "objective": "On docker-01, publish a container so host port 8080 answers HTTP 200 at / from win-01.",
+  "hint": "ssh docker-01 then: docker run -d --name api -p 8080:80 nginx",
+  "par": 1,
+  "os_focus": ["linux"],
+  "start": {
+    "networks": { "lab": "172.17.0.0/24" },
+    "hosts": {
+      "docker-01": {
+        "os": "linux",
+        "role": "docker-host",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "172.17.0.1", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false,
+        "vars": { "ip_forward": "1" }
+      },
+      "win-01": {
+        "os": "windows",
+        "role": "client",
+        "interfaces": {
+          "Ethernet0": { "network": "lab", "ip": "172.17.0.50", "prefix": 24, "state": "up" }
+        },
+        "default_gateway": "172.17.0.1",
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "http_status",
+      "params": { "source": "win-01", "target": "172.17.0.1", "port": 8080, "path": "/", "status": 200 },
+      "description": "GET http://172.17.0.1:8080/ from win-01 returns 200"
+    }
+  ],
+  "solution_commands": [
+    "ssh docker-01",
+    "docker run -d --name api -p 8080:80 nginx"
+  ]
+}

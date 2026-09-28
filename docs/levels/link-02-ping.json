@@ -1,0 +1,45 @@
+{
+  "id": "link-02-ping-same-net",
+  "sequence": "link",
+  "name": "Same Subnet, Reachable",
+  "objective": "Make 10.0.0.30 configured on client-01 and prove ICMP reachability to server-01 (10.0.0.10).",
+  "hint": "Address the interface first (ip addr add / New-NetIPAddress), then ping 10.0.0.10. The goal checks that ping actually works.",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": { "lab": "10.0.0.0/24" },
+    "hosts": {
+      "client-01": {
+        "os": "linux",
+        "role": "client",
+        "interfaces": {
+          "eth0": { "network": "lab", "state": "up" }
+        },
+        "firewall_enabled": false
+      },
+      "server-01": {
+        "os": "linux",
+        "role": "server",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.10", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "has_ip",
+      "params": { "host": "client-01", "iface": "eth0", "ip": "10.0.0.30", "prefix": 24 },
+      "description": "client-01 is addressed 10.0.0.30/24"
+    },
+    {
+      "type": "ping_ok",
+      "params": { "source": "client-01", "target": "10.0.0.10" },
+      "description": "client-01 can ping server-01"
+    }
+  ],
+  "solution_commands": [
+    "ip addr add 10.0.0.30/24 dev eth0"
+  ]
+}

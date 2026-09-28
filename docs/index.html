@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>learn-networking — interactive lab for data &amp; DevOps</title>
+  <meta name="description" content="Learn networking on Linux and Windows with an LGB-style sandbox and levels. Built for data engineers and DevOps." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>learn-networking</h1>
+        <p>Linux + Windows · data &amp; DevOps · LGB-style levels</p>
+      </div>
+    </div>
+    <nav class="top-actions">
+      <button type="button" id="btn-levels" class="btn">Levels</button>
+      <button type="button" id="btn-sandbox" class="btn">Sandbox</button>
+      <button type="button" id="btn-topo" class="btn">Topology</button>
+      <button type="button" id="btn-help" class="btn btn-ghost">Help</button>
+      <a class="btn btn-ghost" href="https://github.com/alisadeghiaghili/learn-networking" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="panel terminal-panel">
+      <div class="panel-head">
+        <div>
+          <span class="pill" id="mode-pill">sandbox</span>
+          <span class="muted" id="host-label">you@web-01</span>
+        </div>
+        <div class="muted mono" id="score-label">commands 0</div>
+      </div>
+      <div id="terminal" class="terminal" tabindex="0" aria-label="Command terminal">
+        <div id="term-out" class="term-out"></div>
+        <form id="term-form" class="term-form" autocomplete="off">
+          <label class="prompt" id="term-prompt" for="term-input">you@web-01:~$</label>
+          <input id="term-input" name="command" spellcheck="false" autocapitalize="off" autocomplete="off" />
+        </form>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="panel-head">
+          <h2 id="objective-title">Sandbox</h2>
+          <button type="button" id="btn-hint" class="btn btn-sm">Hint</button>
+        </div>
+        <p id="objective-text" class="objective">Free-play lab. Type <code>levels</code> to pick a challenge, or explore with <code>ip</code>, <code>ping</code>, <code>ssh</code>.</p>
+        <div id="goal-box" class="goal-box">
+          <div class="muted">Goal checks appear when a level is loaded.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Topology</h2>
+          <button type="button" id="btn-refresh-topo" class="btn btn-sm btn-ghost">Refresh</button>
+        </div>
+        <pre id="topo-view" class="topo mono"></pre>
+      </section>
+
+      <section class="panel host-panel">
+        <div class="panel-head">
+          <h2>Hosts</h2>
+        </div>
+        <ul id="host-list" class="host-list"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span>Inspired by <a href="https://github.com/pcottle/learnGitBranching" target="_blank" rel="noopener">learnGitBranching</a></span>
+    <span class="muted">Python CLI available in the repo · MIT</span>
+  </footer>
+
+  <dialog id="levels-dialog" class="dialog">
+    <div class="dialog-head">
+      <h2>Levels</h2>
+      <button type="button" class="btn btn-ghost" id="btn-close-levels">Close</button>
+    </div>
+    <div id="levels-body" class="levels-body"></div>
+  </dialog>
+
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

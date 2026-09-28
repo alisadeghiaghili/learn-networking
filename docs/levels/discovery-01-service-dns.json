@@ -1,0 +1,67 @@
+{
+  "id": "discovery-01-service-dns",
+  "sequence": "discovery",
+  "name": "ClusterIP Name",
+  "objective": "In this K8s-style lab, make payments.default.svc.cluster.local resolve to 10.96.0.20 (the service VIP).",
+  "hint": "nsupdate add A payments.default.svc.cluster.local 10.96.0.20",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": {
+      "pod-net": "10.244.0.0/24",
+      "svc-net": "10.96.0.0/24"
+    },
+    "hosts": {
+      "pod-01": {
+        "os": "linux",
+        "role": "pod",
+        "interfaces": {
+          "eth0": { "network": "pod-net", "ip": "10.244.0.10", "prefix": 24, "state": "up" }
+        },
+        "search_domains": ["default.svc.cluster.local", "svc.cluster.local", "cluster.local"],
+        "firewall_enabled": false
+      },
+      "payments-01": {
+        "os": "linux",
+        "role": "pod",
+        "interfaces": {
+          "eth0": { "network": "pod-net", "ip": "10.244.0.21", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false,
+        "services": {
+          "8080": { "proto": "tcp", "name": "payments", "banner": "payments ok", "healthy": true }
+        }
+      },
+      "payments-vip": {
+        "os": "linux",
+        "role": "svc",
+        "interfaces": {
+          "eth0": { "network": "svc-net", "ip": "10.96.0.20", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false,
+        "services": {
+          "8080": { "proto": "tcp", "name": "payments-lb", "banner": "payments ok", "healthy": true }
+        }
+      }
+    },
+    "dns_zones": {
+      "cluster.local": {},
+      "svc.cluster.local": {},
+      "default.svc.cluster.local": {}
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "dns_resolves",
+      "params": {
+        "host": "pod-01",
+        "name": "payments.default.svc.cluster.local",
+        "ip": "10.96.0.20"
+      },
+      "description": "payments.default.svc.cluster.local -> 10.96.0.20"
+    }
+  ],
+  "solution_commands": [
+    "nsupdate add A payments.default.svc.cluster.local 10.96.0.20"
+  ]
+}

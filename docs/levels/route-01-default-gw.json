@@ -1,0 +1,54 @@
+{
+  "id": "route-01-default-gw",
+  "sequence": "route",
+  "name": "Out Through the Gateway",
+  "objective": "Set 10.0.0.1 as the default gateway on client-01 so it can leave its subnet.",
+  "hint": "Linux: ip route add default via 10.0.0.1  |  Windows: New-NetRoute -DestinationPrefix 0.0.0.0/0 -NextHop 10.0.0.1",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": {
+      "lab": "10.0.0.0/24",
+      "wan": "10.9.9.0/24"
+    },
+    "hosts": {
+      "client-01": {
+        "os": "linux",
+        "role": "client",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.30", "prefix": 24, "state": "up" }
+        },
+        "firewall_enabled": false
+      },
+      "gw-01": {
+        "os": "linux",
+        "role": "router",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.1", "prefix": 24, "state": "up" },
+          "eth1": { "network": "wan", "ip": "10.9.9.1", "prefix": 24, "state": "up" }
+        },
+        "vars": { "ip_forward": "1" },
+        "firewall_enabled": false
+      },
+      "remote-01": {
+        "os": "linux",
+        "role": "remote",
+        "interfaces": {
+          "eth0": { "network": "wan", "ip": "10.9.9.50", "prefix": 24, "state": "up" }
+        },
+        "default_gateway": "10.9.9.1",
+        "firewall_enabled": false
+      }
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "default_gateway",
+      "params": { "host": "client-01", "gateway": "10.0.0.1" },
+      "description": "client-01 default gateway is 10.0.0.1"
+    }
+  ],
+  "solution_commands": [
+    "ip route add default via 10.0.0.1"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "dns-01-a-record",
+  "sequence": "dns",
+  "name": "Name to Address",
+  "objective": "Make api.internal resolve to 10.0.2.10 so the app stops hardcoding IPs.",
+  "hint": "nsupdate add A internal api 10.0.2.10  (or dns-add-record). Then dig api.internal.",
+  "par": 1,
+  "os_focus": ["linux", "windows"],
+  "start": {
+    "networks": {
+      "lab": "10.0.0.0/24",
+      "db-net": "10.0.2.0/24"
+    },
+    "hosts": {
+      "client-01": {
+        "os": "linux",
+        "role": "client",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.30", "prefix": 24, "state": "up" }
+        },
+        "default_gateway": "10.0.0.1",
+        "dns_servers": ["10.0.0.53"],
+        "search_domains": ["internal"],
+        "firewall_enabled": false
+      },
+      "gw-01": {
+        "os": "linux",
+        "role": "router",
+        "interfaces": {
+          "eth0": { "network": "lab", "ip": "10.0.0.1", "prefix": 24, "state": "up" },
+          "eth1": { "network": "db-net", "ip": "10.0.2.1", "prefix": 24, "state": "up" }
+        },
+        "vars": { "ip_forward": "1" },
+        "firewall_enabled": false
+      },
+      "api-01": {
+        "os": "linux",
+        "role": "api",
+        "interfaces": {
+          "eth0": { "network": "db-net", "ip": "10.0.2.10", "prefix": 24, "state": "up" }
+        },
+        "default_gateway": "10.0.2.1",
+        "firewall_enabled": false,
+        "services": {
+          "8080": { "proto": "tcp", "name": "http", "banner": "api v1", "healthy": true }
+        }
+      }
+    },
+    "dns_zones": {
+      "internal": {}
+    }
+  },
+  "goal_checks": [
+    {
+      "type": "dns_resolves",
+      "params": { "host": "client-01", "name": "api.internal", "ip": "10.0.2.10" },
+      "description": "api.internal resolves to 10.0.2.10"
+    }
+  ],
+  "solution_commands": [
+    "nsupdate add A internal api 10.0.2.10"
+  ]
+}
