@@ -1,20 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" fill="none" role="img" aria-label="learn-networking">
-  <!-- mark -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="learn-networking">
   <rect width="64" height="64" rx="14" fill="#0D1117"/>
   <rect x="1" y="1" width="62" height="62" rx="13" stroke="#2DD4BF" stroke-opacity="0.35" stroke-width="2"/>
-  <path d="M22 22 L32 32 L42 22" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- network links -->
+  <path d="M22 22 L32 32 L42 22" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
   <path d="M22 22 L22 42 L32 32" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
   <path d="M42 22 L42 42 L32 32" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+  <!-- nodes -->
   <circle cx="22" cy="22" r="5.5" fill="#0D1117" stroke="#5EEAD4" stroke-width="2.5"/>
   <circle cx="42" cy="22" r="5.5" fill="#0D1117" stroke="#5EEAD4" stroke-width="2.5"/>
   <circle cx="22" cy="42" r="5.5" fill="#0D1117" stroke="#5EEAD4" stroke-width="2.5"/>
   <circle cx="42" cy="42" r="5.5" fill="#0D1117" stroke="#5EEAD4" stroke-width="2.5"/>
+  <!-- center hub -->
   <circle cx="32" cy="32" r="6.5" fill="#2DD4BF"/>
   <circle cx="32" cy="32" r="2.2" fill="#0D1117"/>
+  <!-- terminal caret -->
   <path d="M14 51 L18 47 L14 43" stroke="#F5A524" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M21 51 H28" stroke="#F5A524" stroke-width="2.2" stroke-linecap="round"/>
-
-  <!-- wordmark -->
-  <text x="80" y="38" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="22" font-weight="700" fill="#E6EDF3" letter-spacing="-0.5">learn-</text>
-  <text x="152" y="38" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="22" font-weight="700" fill="#2DD4BF" letter-spacing="-0.5">networking</text>
 </svg>
